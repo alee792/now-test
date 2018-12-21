@@ -1,12 +1,13 @@
 {
     "version": 2,
-    "name": "go",
+    "name": "wonder",
     "builds": [
-        {"src": "api/*.go", "use": "@now/go"},
-        {"src": "index.html", "use": "@now/static"}
+        {"src": "pkg/handlers/*.go", "use": "@now/go"},
+        {"src": "web/*.html", "use": "@now/html-minifier"},
+        {"src": "web/*.js", "use": "@now/static"}
     ],
     "routes": [
-        {"src": "/api/(.*)", "dest": "/api/$1"},
-        {"src": "/(.*)", "dest": "$1"}
+        {"src": "/api/(.*)", "dest": "/pkg/handlers/$1"},
+        {"src": "/(.*)", "dest": "/web/$1"}
     ]
 }
