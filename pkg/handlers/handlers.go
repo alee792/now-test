@@ -26,3 +26,8 @@ func Index(w http.ResponseWriter, r *http.Request) {
 func Time(w http.ResponseWriter, r *http.Request) {
 	s.Time()(w, r)
 }
+
+// User is a now compatible wrapper.
+func User(w http.ResponseWriter, r *http.Request) {
+	s.UsersByRepo()(w, r)
+}
