@@ -2,8 +2,10 @@ package main
 
 import (
 	"net/http"
+
+	"github.com/alee792/wonder/pkg/handlers"
 )
 
 func Time(w http.ResponseWriter, r *http.Request) {
-	s.Time()(w, r)
+	handlers.Time(w, r)
 }
