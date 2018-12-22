@@ -9,5 +9,8 @@
     "routes": [
         {"src": "/api/(.*)", "dest": "/pkg/now/$1"},
         {"src": "/(.*)", "dest": "/web/$1"}
-    ]
+    ],
+    "env": {
+        "GITHUB_OA2": "@GITHUB_OA2"
+    }
 }
