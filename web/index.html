@@ -1,20 +1,22 @@
 <html>
-    <head>
-        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-    </head>
-    <body>
-        <div id="clock">
-            Time: {{ time }}
-        </div>    
-        <div id="user-app">
-            <user-profile
-                v-for="user in users"
-                v-bind:user="user"
-                v-bind:key="user.login">
-            </user-profile>
 
-        </div>
-        <script src="app.js"></script>
-    </body>
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+
+<body>
+    <div id="clock">
+        Time: {{ time }}
+    </div>
+    <div id="user-app">
+        <span>Users</span>
+        <ol>
+            <user-profile v-for="user in sortedUsers" v-bind:user="user" v-bind:key="user.login">
+            </user-profile>
+        </ol>
+    </div>
+    <script src="app.js"></script>
+</body>
+
 </html>

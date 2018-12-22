@@ -1,9 +1,14 @@
 package http
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"time"
+
+	"github.com/alee792/wonder/pkg/wonder"
 )
 
 // Index is the home page.
@@ -17,5 +22,42 @@ func (s *Server) Index() http.HandlerFunc {
 func (s *Server) Time() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "%s", time.Now().Format(time.RFC1123Z))
+	}
+}
+
+func (s *Server) UsersByRepo() http.HandlerFunc {
+	type ListUsersRequest struct {
+		Owner string
+		Repo  string
+	}
+	return func(w http.ResponseWriter, r *http.Request) {
+		var luReq ListUsersRequest
+		raw, err := ioutil.ReadAll(r.Body)
+		if err != nil || raw == nil {
+			http.Error(w, "valid POST body required", http.StatusBadRequest)
+		}
+		body := bytes.NewBuffer(raw)
+		err = json.NewDecoder(body).Decode(&luReq)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("json decode failed: %s", err), http.StatusBadRequest)
+		}
+		ctx := r.Context()
+		commits, err := s.Wonder.GetCommits(ctx, luReq.Owner, luReq.Repo)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("GetCommits failed: %s", err), http.StatusInternalServerError)
+		}
+		users, err := s.Wonder.GetUsers(ctx, commits)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("GetUsers failed: %s", err), http.StatusInternalServerError)
+		}
+		// Convert map key to string to fulfill JSON spec.
+		var uu []wonder.User
+		for _, v := range users {
+			uu = append(uu, *v)
+		}
+		err = json.NewEncoder(w).Encode(&uu)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("json encode failed: %s", err), http.StatusInternalServerError)
+		}
 	}
 }

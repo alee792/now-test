@@ -4,6 +4,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-chi/chi v3.3.3+incompatible
 	github.com/google/go-github/v18 v18.2.0
+	github.com/kelseyhightower/envconfig v1.3.0
 	github.com/pkg/errors v0.8.0
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/testify v1.2.2 // indirect

@@ -1,27 +1,33 @@
 package http
 
 import (
+	"github.com/alee792/wonder/pkg/wonder"
 	"fmt"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/go-chi/chi"
 	"go.uber.org/zap"
 )
 
+// Config for Server.
+type Config struct {
+	Wonder wonder.Config
+}
+
 // Server wraps the default net/http implementation.
 type Server struct {
+	Wonder *wonder.Client
 	Router chi.Router
 	Logger *zap.SugaredLogger
 	http   http.Server
 }
 
 // NewServer for HTTP.
-func NewServer() *Server {
+func NewServer(cfg Config) *Server {
 	r := chi.NewRouter()
 	return &Server{
+		Wonder: wonder.NewClient(cfg.Wonder),
 		Router: r,
 		Logger: zap.NewExample().Sugar(),
 		http: http.Server{
@@ -36,17 +42,6 @@ func (s *Server) ListenAndServe(port int, r http.Handler) error {
 		r = s.Router
 	}
 	return http.ListenAndServe(fmt.Sprintf(":%d", port), r)
-}
-
-// Routes sets a servers handlers.
-func (s *Server) Routes() {
-	s.Router.Route("/api", func(r chi.Router) {
-		r.Get("/index.go", s.Index())
-		r.Get("/time.go", s.Time())
-	})
-	wd, _ := os.Getwd()
-	filesDir := filepath.Join(wd, "web")
-	FileServer(s.Router, "/", http.Dir(filesDir))
 }
 
 // FileServer conveniently sets up a http.FileServer handler to serve

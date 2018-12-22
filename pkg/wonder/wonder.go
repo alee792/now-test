@@ -12,7 +12,7 @@ import (
 
 // Config for Client.
 type Config struct {
-	OAuth2Token    string `envconfig:"OAUTH2_TOKEN"`
+	OAuth2Token    string `envconfig:"GITHUB_OA2"`
 	MaxConcurrency int    `envconfig:"MAX_CONCURRENCY" default:"20"`
 }
 

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"time"
 
 	wonderhttp "github.com/alee792/wonder/internal/http"
 )
@@ -10,6 +11,7 @@ var s *wonderhttp.Server
 
 func init() {
 	s = wonderhttp.NewServer()
+	s.Logger.Info("new instance at %s", time.Now().Format(time.RFC1123Z))
 }
 
 // Index is a now compaitble wrapper.

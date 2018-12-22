@@ -1,11 +1,17 @@
 package main
 
 import (
-	"github.com/alee792/wonder/pkg/http"
+	"fmt"
+
+	"github.com/alee792/wonder/internal/http"
+	"github.com/kelseyhightower/envconfig"
 )
 
 func main() {
-	s := http.NewServer()
+	var cfg http.Config
+	envconfig.MustProcess("", &cfg)
+	fmt.Printf("%+v", cfg)
+	s := http.NewServer(cfg)
 	s.Routes()
 	s.ListenAndServe(8080, nil)
 }

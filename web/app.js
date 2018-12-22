@@ -1,3 +1,8 @@
+Vue.component('user-profile', {
+    props: ['user'],
+    template: '<li> {{ user.Login }} {{ user.Total }} </li>'
+})
+
 var clock = new Vue({
     el: '#clock',
     data: {
@@ -7,7 +12,7 @@ var clock = new Vue({
         getTime() {
             axios
                 .get('/api/time.go')
-                .then(response => (this.time = response.data))
+                .then(resp => (this.time = resp.data))
         },
         pollTime() {
             this.getTime()
@@ -17,28 +22,38 @@ var clock = new Vue({
         }
     },
     mounted () {
-        this.pollTime()
+        this.getTime()
     }
 });
 
-Vue.Component('user-profile', {
-    props: ['user'],
-    template: '<li>{{ user.login }}</li>'
-})
-
 var userApp = new Vue({
-    el: '#userApp',
+    el: '#user-app',
     data: {
         users: []
     },
     methods: {
         getUsers() {
             axios  
-                .get('/api/users.go')
-                .then(resp => (this.users = response.data))
+                .post('/api/user.go',{
+                    owner: "go-chi",
+                    repo: "chi"
+                })
+                .then(resp => (this.users = resp.data))
+        }
+    },
+    computed: {
+        sortedUsers: function() {
+            function compare(a,b) {
+                if (a.Total < b.Total)
+                    return 1;
+                if (a.Total > b.Total)
+                    return -1;
+                return 0;
+            }
+            return this.users.sort(compare);
         }
     },
     mounted () {
-
+        this.getUsers()
     }
 });
