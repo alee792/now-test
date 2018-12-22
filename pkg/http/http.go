@@ -1,11 +1,10 @@
 package http
 
 import (
-	"path/filepath"
-	"os"
-	"github.com/alee792/wonder/pkg/handlers"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/go-chi/chi"
@@ -41,13 +40,9 @@ func (s *Server) ListenAndServe(port int, r http.Handler) error {
 
 // Routes sets a servers handlers.
 func (s *Server) Routes() {
-	s.Router.Route("/api", func(r chi.Router){
-		r.Get("/index.go", func(w http.ResponseWriter, r *http.Request){ 
-			handlers.Index(w, r)
-		})
-		r.Get("/time.go", func(w http.ResponseWriter, r *http.Request){
-			handlers.Time(w, r)
-		})
+	s.Router.Route("/api", func(r chi.Router) {
+		r.Get("/index.go", s.Index())
+		r.Get("/time.go", s.Time())
 	})
 	wd, _ := os.Getwd()
 	filesDir := filepath.Join(wd, "web")

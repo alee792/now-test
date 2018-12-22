@@ -1,5 +1,5 @@
-var app = new Vue({
-    el: '#app',
+var clock = new Vue({
+    el: '#clock',
     data: {
         time: '',
     },
@@ -21,3 +21,24 @@ var app = new Vue({
     }
 });
 
+Vue.Component('user-profile', {
+    props: ['user'],
+    template: '<li>{{ user.login }}</li>'
+})
+
+var userApp = new Vue({
+    el: '#userApp',
+    data: {
+        users: []
+    },
+    methods: {
+        getUsers() {
+            axios  
+                .get('/api/users.go')
+                .then(resp => (this.users = response.data))
+        }
+    },
+    mounted () {
+
+    }
+});

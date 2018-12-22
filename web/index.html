@@ -4,9 +4,17 @@
         <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     </head>
     <body>
-        <div id="app">
+        <div id="clock">
             Time: {{ time }}
         </div>    
+        <div id="user-app">
+            <user-profile
+                v-for="user in users"
+                v-bind:user="user"
+                v-bind:key="user.login">
+            </user-profile>
+
+        </div>
         <script src="app.js"></script>
     </body>
 </html>

@@ -3,9 +3,17 @@ package main
 import (
 	"net/http"
 
-	"github.com/alee792/wonder/pkg/handlers"
+	wonderhttp "github.com/alee792/wonder/pkg/http"
 )
 
+var s *wonderhttp.Server
+
+func init() {
+	s = wonderhttp.NewServer()
+}
+
+func main() {}
+
 func Index(w http.ResponseWriter, r *http.Request) {
-	handlers.Index(w, r)
+	s.Index()(w, r)
 }

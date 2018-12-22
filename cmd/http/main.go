@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/alee792/wonder/internal/http"
+	"github.com/alee792/wonder/pkg/http"
 )
 
 func main() {
