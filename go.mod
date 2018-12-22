@@ -3,6 +3,7 @@ module github.com/alee792/wonder
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/go-chi/chi v3.3.3+incompatible
+	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/go-github/v18 v18.2.0
 	github.com/kelseyhightower/envconfig v1.3.0
 	github.com/pkg/errors v0.8.0
