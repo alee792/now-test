@@ -5,12 +5,15 @@ import (
 	"time"
 
 	wonderhttp "github.com/alee792/wonder/internal/http"
+	"github.com/kelseyhightower/envconfig"
 )
 
 var s *wonderhttp.Server
 
 func init() {
-	s = wonderhttp.NewServer()
+	var cfg wonderhttp.Config
+	envconfig.MustProcess("", &cfg)
+	s = wonderhttp.NewServer(cfg)
 	s.Logger.Info("new instance at %s", time.Now().Format(time.RFC1123Z))
 }
 
