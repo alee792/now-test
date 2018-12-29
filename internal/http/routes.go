@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/go-chi/chi/middleware"
+
 	"github.com/go-chi/chi"
 )
 
@@ -13,7 +15,7 @@ func (s *Server) Routes() {
 	s.Router.Route("/api", func(r chi.Router) {
 		r.Get("/index.go", s.Index())
 		r.Get("/time.go", s.Time())
-		r.Post("/user.go", s.UsersByRepo())
+		r.With(middleware.Logger).Post("/repo.go", s.Repo())
 	})
 	wd, _ := os.Getwd()
 	filesDir := filepath.Join(wd, "web")

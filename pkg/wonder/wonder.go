@@ -2,6 +2,7 @@ package wonder
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -37,8 +38,10 @@ type Server struct {
 // Repo holds data relevant to a Git repository.
 type Repo struct {
 	*github.Repository
-	Users   *sync.Map // Key: ID, Value: User
-	Commits *sync.Map // Key: SHA, Value: Commit
+	Users   map[int64]*User    // Key: ID, Value: User
+	Commits map[string]*Commit // Key: SHA, Value: Commit
+	Since   time.Time
+	Until   time.Time
 }
 
 // User shows user's stats.
@@ -73,6 +76,7 @@ func NewClient(cfg Config) *Server {
 	}
 }
 
+// ProcessRepo aggregates a repositories user stats.
 func (s *Server) ProcessRepo(ctx context.Context, owner, repoName string) (*Repo, error) {
 	gitRepo, _, err := s.RepoService.Get(ctx, owner, repoName)
 	if err != nil {
@@ -80,12 +84,15 @@ func (s *Server) ProcessRepo(ctx context.Context, owner, repoName string) (*Repo
 	}
 	repo := &Repo{
 		Repository: gitRepo,
-		Users:      &sync.Map{},
-		Commits:    &sync.Map{},
+		Users:      make(map[int64]*User),
+		Commits:    make(map[string]*Commit),
+		Since: time.Now().Truncate(24 * time.Hour).
+			Add(-time.Duration(s.Config.SinceDays)),
 	}
 
 	group, ctx := errgroup.WithContext(ctx)
 
+	// Obtain commits for specified repo.
 	cmtC := make(chan *Commit)
 	group.Go(func() error {
 		err = s.getCommits(ctx, owner, repoName, cmtC)
@@ -94,19 +101,25 @@ func (s *Server) ProcessRepo(ctx context.Context, owner, repoName string) (*Repo
 		}
 		return nil
 	})
+
+	// Populate Users and Commits maps.
+	// Aggregate user statistics.
 	group.Go(func() error {
 		for cmt := range cmtC {
 			u := cmt.user()
-			stored, ok := repo.Users.LoadOrStore(u.user.GetID(), u)
-			if ok {
-				u, ok = stored.(*User)
-				if !ok {
-					return errors.New("*User type assertion failed")
-				}
+			if u == nil {
+				fmt.Printf("%+v", cmt.commit)
+				continue
 			}
-			// Not loading because SHAs should be unique.
-			repo.Commits.Store(cmt.commit.GetSHA(), cmt)
+			id := u.user.GetID()
+			stored, ok := repo.Users[id]
+			if ok {
+				u = stored
+			}
+			// Not checking for existing commit because SHAs should be unique.
+			repo.Commits[cmt.commit.GetSHA()] = cmt
 			u.aggregateStats(cmt)
+			repo.Users[id] = u
 		}
 		return nil
 	})
@@ -120,6 +133,7 @@ func (s *Server) ProcessRepo(ctx context.Context, owner, repoName string) (*Repo
 }
 
 func (s *Server) getCommits(ctx context.Context, owner, repoName string, cmtC chan<- *Commit) error {
+	defer close(cmtC)
 	sem := semaphore.NewWeighted(s.MaxConcurrency)
 	group, ctx := errgroup.WithContext(ctx)
 
@@ -128,7 +142,7 @@ func (s *Server) getCommits(ctx context.Context, owner, repoName string, cmtC ch
 			PerPage: 500,
 		},
 		Since: time.Now().Truncate(24 * time.Hour).
-			Add(-time.Duration(s.Config.SinceDays)),
+			Add(-time.Duration(s.Config.SinceDays) * 24 * time.Hour),
 	}
 
 	// Bulk commit queries do not return all stats,
@@ -136,18 +150,28 @@ func (s *Server) getCommits(ctx context.Context, owner, repoName string, cmtC ch
 
 	// Get commit SHAs.
 	shaC := make(chan string)
+	var shaWG sync.WaitGroup
+
 	cc, resp, err := s.ListCommits(ctx, owner, repoName, opt)
 	if err != nil {
 		return errors.Wrap(err, "ListCommits failed")
 	}
-	for _, c := range cc {
-		shaC <- c.GetSHA()
-	}
+
+	shaWG.Add(1)
+	go func() {
+		for _, c := range cc {
+			shaC <- c.GetSHA()
+		}
+		defer shaWG.Done()
+	}()
 	group.Go(func() error {
+		defer close(shaC)
 		for i := 0; i < resp.LastPage; i++ {
 			sem.Acquire(ctx, 1)
+			shaWG.Add(1)
 			group.Go(func() error {
 				defer sem.Release(1)
+				defer shaWG.Done()
 				cc, _, err := s.ListCommits(ctx, owner, repoName, opt)
 				if err != nil {
 					return errors.Wrap(err, "ListCommits failed")
@@ -158,6 +182,7 @@ func (s *Server) getCommits(ctx context.Context, owner, repoName string, cmtC ch
 				return nil
 			})
 		}
+		shaWG.Wait()
 		return nil
 	})
 
@@ -184,7 +209,11 @@ func (s *Server) getCommits(ctx context.Context, owner, repoName string, cmtC ch
 func (c *Commit) user() *User {
 	a := c.commit.GetAuthor()
 	if a == nil {
-		return nil
+		ca := c.commit.Commit.GetAuthor()
+		return &User{
+			Name:  ca.GetName(),
+			Login: ca.GetLogin(),
+		}
 	}
 	id := a.GetID()
 	if id == 0 {

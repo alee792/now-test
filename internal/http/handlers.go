@@ -25,34 +25,29 @@ func (s *Server) Time() http.HandlerFunc {
 	}
 }
 
-func (s *Server) UsersByRepo() http.HandlerFunc {
-	type ListUsersRequest struct {
+func (s *Server) Repo() http.HandlerFunc {
+	type RepoRequest struct {
 		Owner string
 		Repo  string
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
-		var luReq ListUsersRequest
+		var req RepoRequest
 		raw, err := ioutil.ReadAll(r.Body)
 		if err != nil || raw == nil {
 			http.Error(w, "valid POST body required", http.StatusBadRequest)
 		}
 		body := bytes.NewBuffer(raw)
-		err = json.NewDecoder(body).Decode(&luReq)
+		err = json.NewDecoder(body).Decode(&req)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("json decode failed: %s", err), http.StatusBadRequest)
 		}
 		ctx := r.Context()
-		commits, err := s.Wonder.GetCommits(ctx, luReq.Owner, luReq.Repo)
+		repo, err := s.Wonder.ProcessRepo(ctx, req.Owner, req.Repo)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("GetCommits failed: %s", err), http.StatusInternalServerError)
 		}
-		users, err := s.Wonder.GetUsers(ctx, commits)
-		if err != nil {
-			http.Error(w, fmt.Sprintf("GetUsers failed: %s", err), http.StatusInternalServerError)
-		}
-		// Convert map key to string to fulfill JSON spec.
 		var uu []wonder.User
-		for _, v := range users {
+		for _, v := range repo.Users {
 			uu = append(uu, *v)
 		}
 		err = json.NewEncoder(w).Encode(&uu)

@@ -19,15 +19,22 @@ func init() {
 
 // Index is a now compaitble wrapper.
 func Index(w http.ResponseWriter, r *http.Request) {
+	setCacheControlHeader(w)
 	s.Index()(w, r)
 }
 
 // Time is a now compatible wrapper.
 func Time(w http.ResponseWriter, r *http.Request) {
+	setCacheControlHeader(w)
 	s.Time()(w, r)
 }
 
-// User is a now compatible wrapper.
-func User(w http.ResponseWriter, r *http.Request) {
-	s.UsersByRepo()(w, r)
+// Repo is a now compatible wrapper.
+func Repo(w http.ResponseWriter, r *http.Request) {
+	setCacheControlHeader(w)
+	s.Repo()(w, r)
+}
+
+func setCacheControlHeader(w http.ResponseWriter) {
+	w.Header().Set("Cache-Control", "s-max-age=86400, max-age=86400")
 }

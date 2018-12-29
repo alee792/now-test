@@ -34,9 +34,9 @@ var userApp = new Vue({
     methods: {
         getUsers() {
             axios  
-                .post('/api/user.go',{
-                    owner: "go-chi",
-                    repo: "chi"
+                .post('/api/repo.go',{
+                    owner: "docker",
+                    repo: "docker"
                 })
                 .then(resp => (this.users = resp.data))
         }
