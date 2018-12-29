@@ -1,10 +1,11 @@
 package http
 
 import (
-	"github.com/alee792/wonder/pkg/wonder"
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/alee792/wonder/pkg/wonder"
 
 	"github.com/go-chi/chi"
 	"go.uber.org/zap"
@@ -17,7 +18,7 @@ type Config struct {
 
 // Server wraps the default net/http implementation.
 type Server struct {
-	Wonder *wonder.Client
+	Wonder *wonder.Server
 	Router chi.Router
 	Logger *zap.SugaredLogger
 	http   http.Server
